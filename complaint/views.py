@@ -6,36 +6,43 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
-
 from .decorators import unauthenticated_user, admin_only,allow_user
-from .forms import RegisterComplaintForm
-
+from .forms import RegisterComplaintForm, UserRegistrationForm
+from django.db.models import Q
 
 @login_required(login_url='login')
 @admin_only
 def admin_view_complaints(request):
-    complaints = Complaint.objects.filter(created_date__lte=timezone.now()).order_by('created_date')
+    complaints = Complaint.objects.filter(~Q(status = 'closed')).order_by('created_date')
+    filter_by = request.GET.get('filter_by_category')
+    if filter_by in [i[0] for i in Complaint.CATEGORY_CHOICES]:
+        complaints=Complaint.objects.filter(~Q(status = 'closed'), category=filter_by)
     zero_complaints=complaints.count() == 0
     return render(request, 'complaint/complaints_table.html',
                   context={'complaints': complaints , 'is_admin': True,
-                           'zero_complaints':zero_complaints, 'home_header':'active'})
+                           'zero_complaints':zero_complaints, 'home_header':'active',
+                           'view_url': reverse('admin_complaints_view')})
 
 @login_required(login_url='login')
 def user_view_complaints(request):
     log_in_user = User.objects.filter(username=request.user.username).first()
+    total_complaints=Complaint.objects.all().count()
+    total_pending=Complaint.objects.filter(status='in_progress',author=log_in_user).count()
+    total_closed=Complaint.objects.filter(status='closed',author=log_in_user).count()
     complaints = Complaint.objects.filter(author=log_in_user).order_by('created_date')
+    filter_by = request.GET.get('filter_by_category')
+    if filter_by in [i[0] for i in Complaint.CATEGORY_CHOICES]:
+        complaints=Complaint.objects.filter(category=filter_by,author=log_in_user)
     no_of_complaints=len(complaints)
     return render(request, 'complaint/complaints_table.html',
-                  context={'complaints': complaints, 'is_user': True, 
-                  'user_name':log_in_user, 'no_of_complaints':no_of_complaints,
-                 'home_header':'active'})
-
+                  context={'complaints': complaints, 'is_user': True, 'complaint_count': total_complaints,
+                  'total_pending':total_pending,'total_closed':total_closed,'user_name':log_in_user, 'no_of_complaints':no_of_complaints,
+                 'home_header':'active', 'view_url': reverse('user_complaints_view')})
 
 @login_required(login_url='login')
 def logging_out_view(request):
     logout(request)
-    return render(request, 'complaint/logout.html')
+    return HttpResponseRedirect(reverse('login'))
 
 @login_required(login_url='login')
 @allow_user
@@ -94,25 +101,27 @@ def change_password_view(request):
                 if user:
                     login(request, user)
                     return render(request, 'complaint/change_password.html', context={
-                        "pass_changed": True,
+                        "pass_changed": True, 'password_header': 'active'
                     })
             else:
                 return render(request, 'complaint/change_password.html', context={
-                        "old_pass_wrong": True,
+                        "old_pass_wrong": True, 'password_header': 'active'
                     })
         else:
             return render(request, 'complaint/change_password.html', context={
-                        "pass_mismatch": True,
+                        "pass_mismatch": True, 'password_header': 'active'
                     })
 
-    return render(request, 'complaint/change_password.html')
+    return render(request, 'complaint/change_password.html',
+                  {'password_header': 'active'})
 
 
 @unauthenticated_user
 def sign_up_view(request):
-    form = UserCreationForm(request.POST)
+    form=UserRegistrationForm(request.POST)
     if request.method=='POST':
         if form.is_valid():
+            print("hello")
             user=form.save()
             login(request,user)
             return HttpResponseRedirect(reverse('user_complaints_view'))
@@ -123,16 +132,52 @@ def sign_up_view(request):
 @login_required(login_url='login')
 def register_complaint_page(request):
     if(request.method == 'POST'):
-        form = RegisterComplaintForm(request.POST)
+        form = RegisterComplaintForm(request.POST, request.FILES)
+        is_anonymous=request.POST.get("is_anonymous")
+        photo = request.POST.get("photo")
         if form.is_valid():
+            print(request.POST)
             complaint = form.save(commit=False)
             complaint.author = request.user
-            complaint.save()
-            return render(request, 'complaint/register_complaint.html',
+            complaint.photo = form.cleaned_data['photo']
+            #complaint.photo.save(name=request.POST.get("title")+".png", content="jhkj")
+            #complaint.photo.name = str(complaint.id) + ".png"
+            if is_anonymous :
+                complaint.is_anonymous = True
+                complaint.save()
+                return render(request, 'complaint/register_complaint.html',
+                   context={"form_saved": True,
+                             "register_header": 'active'})
+            else:
+                complaint.save()
+                return render(request, 'complaint/register_complaint.html',
                    context={"form_saved": True,
                              "register_header": 'active'})
         return render(request, 'complaint/register_complaint.html',
                       context={"invalid_form": True,
                                "register_header": 'active'})
+    return render(request, 'complaint/register_complaint.html',
+                  context={"register_header": 'active'})
+
+
+@login_required(login_url='login')
+@allow_user
+def edit_complaint_byid(request, id):
+    if request.method == "GET":
+        complaint = Complaint.objects.filter(id=id)[0]
+    return render(request, 'complaint/register_complaint.html',
+                  {'complaint': complaint,"edit":True  }) 
+    
+    if(request.method == 'POST'):
+        form = RegisterComplaintForm(request.POST, request.FILES)
+      
+        photo = request.POST.get("photo")
+    return render(request, 'complaint/dialog.html',
+                  {'complaint': complaint,"edit":True  }) 
+    if form.is_valid():
+            print(request.POST)
+            complaint = form.save(commit=False)
+            complaint.author = request.user
+            complaint.photo = form.cleaned_data['photo']  
     return render(request, 'complaint/register_complaint.html',
                   context={"register_header": 'active'})
