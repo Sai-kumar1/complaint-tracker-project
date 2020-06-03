@@ -26,9 +26,9 @@ def admin_view_complaints(request):
 @login_required(login_url='login')
 def user_view_complaints(request):
     log_in_user = User.objects.filter(username=request.user.username).first()
-    total_complaints=Complaint.objects.all().count()
+    total_complaints=Complaint.objects.filter(author=log_in_user).count()
     total_pending=Complaint.objects.filter(status='in_progress',author=log_in_user).count()
-    total_closed=Complaint.objects.filter(status='closed',author=log_in_user).count()
+    total_closed=Complaint.objects.filter(status='closed',author=log_in_user).count()   
     complaints = Complaint.objects.filter(author=log_in_user).order_by('created_date')
     filter_by = request.GET.get('filter_by_category')
     if filter_by in [i[0] for i in Complaint.CATEGORY_CHOICES]:
@@ -37,7 +37,8 @@ def user_view_complaints(request):
     return render(request, 'complaint/complaints_table.html',
                   context={'complaints': complaints, 'is_user': True, 'complaint_count': total_complaints,
                   'total_pending':total_pending,'total_closed':total_closed,'user_name':log_in_user, 'no_of_complaints':no_of_complaints,
-                 'home_header':'active', 'view_url': reverse('user_complaints_view')})
+                'home_header':'active', 'view_url': reverse('user_complaints_view')})        
+ 
 
 @login_required(login_url='login')
 def logging_out_view(request):
@@ -58,7 +59,7 @@ def view_complaint_byid(request, id):
 
     remarks = Remark.objects.filter(complaint=complaint)
     return render(request, 'complaint/view_complaint.html',
-                  {'complaint': complaint, "remarks": remarks,
+                  {'complaint': complaint, "remarks": remarks,'view':False,
                    'status_choices': Complaint.STATUS_CHOICES})
     
 @unauthenticated_user
@@ -67,6 +68,7 @@ def login_view(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
         is_admin = request.POST.get("is_admin")
+        
         user = authenticate(username=username, password=password)
         if user:
             
@@ -163,21 +165,31 @@ def register_complaint_page(request):
 @login_required(login_url='login')
 @allow_user
 def edit_complaint_byid(request, id):
+    complaint = Complaint.objects.filter(id=id)[0]
     if request.method == "GET":
-        complaint = Complaint.objects.filter(id=id)[0]
-    return render(request, 'complaint/register_complaint.html',
+        return render(request, 'complaint/register_complaint.html',
                   {'complaint': complaint,"edit":True  }) 
     
     if(request.method == 'POST'):
         form = RegisterComplaintForm(request.POST, request.FILES)
       
         photo = request.POST.get("photo")
-    return render(request, 'complaint/dialog.html',
-                  {'complaint': complaint,"edit":True  }) 
-    if form.is_valid():
-            print(request.POST)
-            complaint = form.save(commit=False)
-            complaint.author = request.user
-            complaint.photo = form.cleaned_data['photo']  
-    return render(request, 'complaint/register_complaint.html',
-                  context={"register_header": 'active'})
+        print(request.POST)
+        # complaint = form.save(commit=False)
+        # complaint.author = request.POST.get('user')
+        complaint.title = request.POST.get('title')
+        complaint.description = request.POST.get('description') 
+        complaint.photo = photo #form.cleaned_data['photo'] 
+        complaint.save() 
+        return render(request, 'complaint/register_complaint.html',
+                  context={'complaint': complaint,'edit': True})
+        
+
+@login_required(login_url='login')
+@allow_user
+def delete_complaint_byid(request, id):
+    complaint = Complaint.objects.filter(id=id)
+    complaint.delete()
+    return HttpResponseRedirect(reverse('user_complaints_view'))
+                
+      

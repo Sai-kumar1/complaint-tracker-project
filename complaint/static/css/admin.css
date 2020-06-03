@@ -23,28 +23,18 @@
   .active {
     background-color: slategrey;
   }
-  .co{
-    font-size: 20px;
-    border:1px;
-    width: 100%;
-    padding-left: 5%;
-    box-shadow:5px 10px 8px #888888;
-  }
 
- .example-screen print-btn {
-    margin-left: 60%;
-    !important;
-  }
+
   
   }
   .formbox2{
-    align-items: center;
+    
     width:100%;
     height: 100%;
     padding:2% 10%;
-    box-sizing: border-box;
+    
     background:white;
-    box-shadow:1px 10px 40px rgba(0,0,0,.5);
+    
   }
   
   @media screen and (max-width: 500px) {
@@ -186,11 +176,7 @@
   }
 
 
-#print-btn {
-  font-size: 22px;
-  margin-left: 75%;
-  !important;
-}
+
 
   .cng-pass-btn{
     font-size: 17px;
@@ -206,6 +192,9 @@
 @media print {
  .example-screen {
      display: none;
+  }
+  .update-button{
+    display:none;
   }
 }
 
@@ -230,15 +219,16 @@
   box-shadow:0 0px 40px rgba(250,250,250,0);
  
 }
-.left{
-  margin-left: 35%;
- float:left;
 
-}
-.right{
-  margin-right: 30%;
-  font-family: 'Courier New', Courier, monospace;
+.right1{
+  font-size: 20px;
   float:right;
+  width: 50%;
+  padding-left: 5%;
+  padding-top: 2%;
+}
+.user_{
+  float: left;
 }
 textarea{
   font-weight: bold;
@@ -246,14 +236,44 @@ textarea{
   border:none;
   resize: none;
 
+}
+#print-btn {
+  font-size: 22px;
+  width:15%;
+  margin-left: -14%;
+  margin-top: 1%;
+  !important;
+}
+.update-button {
+  font-size: 22px;
+  width:30%;
+  margin-left: 10%;
+  !important;
+}
 
-}
-.container1 label{
-  float:right;
-}
 input{
   font-weight: bold;
  font-size:medium ;
   font-family: sans-serif;
+  border:none;
+}
+.co{
+  font-size: 20px;
+  float:left;
+  width: 50%;
+  padding-left: 5%;
+  padding-top:2%;
+}
+.right{
+  font-size: 20px;
+  float:right;
+  width: 50%;
+  padding-left: 5%;
+  padding-top: 2%;
+}
+.user_{
+  float: left;
+}
+input[type=text]{
   border:none;
 }

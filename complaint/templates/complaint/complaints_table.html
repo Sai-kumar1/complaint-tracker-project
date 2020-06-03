@@ -47,13 +47,14 @@
     <td>{{ complaint.status }}</td>
     <td><a href="{% url 'view_complaint' complaint.id %}"> View |</a>
       <a href="{% url 'edit_complaint' complaint.id %}"> Edit |</a>
-      <a href="{% url 'view_complaint' complaint.id %}"> Delete</a>
+      <a  href="{% url 'delete_complaint' complaint.id %}"  id="del-btn" class="del"> Delete</a>
     </td>
   </tr>
   {% endfor %}
 </table>
 </div>
 {% endif %}
+
 <script type="text/javascript">
   function sorttable(n) {
     if(n===0){window.location.reload();return};
@@ -106,6 +107,22 @@
       }
     }
   }
-}
+};
+$(document).ready(function() {
+    document.getElementById("del-btn").addEventListener("click",function(){
+      $("#dialog").dialog({
+        modal: true,
+        buttons: {
+          Yes: function() {
+            $('').delete();
+            $( this ).dialog( "close" );
+          },
+          No: function() {
+            console.log('clicked no');
+          }
+        }
+      });
+    });
+  });
 </script>
 {% endblock %}

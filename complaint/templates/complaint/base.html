@@ -6,6 +6,9 @@
     <title>{% block title %}Complaint Tracking System{% endblock %}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/admin.css' %}">
 
@@ -33,9 +36,12 @@
 
     {% block content %}
     {% endblock %}
+
+    {% if view %}
     <div class="footer">
     <p>&copy;Copyrights Dinesh, Sahiti, Sai Kumar.</p>
     </div>
+    {% endif %}
     
     </body>
 </html>

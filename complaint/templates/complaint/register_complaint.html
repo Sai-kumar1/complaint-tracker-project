@@ -156,6 +156,7 @@
       cursor: pointer;
       width: 20%;
     }
+  
    .sub-reg{
      font-size: large;
      margin-left: 70%;
@@ -175,6 +176,7 @@
   background:black;
   cursor:pointer;
 }
+
 
 .formbox input[type="submit"]:hover
 {
@@ -252,7 +254,11 @@ h3{
 {% if form_saved %}
 <p>complaint registered! File another complaint below.</p>
 {% endif %}
-<form class="reg-complaint" method="post" action="{% url 'register_complaint' %}" enctype="multipart/form-data">
+{% if edit %}
+<form class="reg-complaint" method="post" action="{% url 'edit_complaint' complaint.id %}" enctype="multipart/form-data">
+{% else %}
+  <form class="reg-complaint" method="post" action="{% url 'register_complaint' %}" enctype="multipart/form-data">
+{% endif %}
     {% csrf_token %}
     <label for="typ"><b><b>Type of complaint:</label>
   <select id="comp" name="category">
@@ -270,7 +276,7 @@ h3{
 <label for="des">Description :</label><br></br>
 {% if edit %}
  <input type="text" name="title" placeholder="enter subject" value={{ complaint.title }} required><br><br>
- <textarea  cols="45" rows="10" placeholder="describe.."  >{{ complaint.description }}</textarea>
+ <textarea  cols="45" rows="10" placeholder="describe.."  name="description">{{ complaint.description }}</textarea>
  {% else %}
  <input type="text" name="title" placeholder="enter subject" required><br><br>
  <textarea  cols="45" rows="10" placeholder="describe.." name="description"></textarea>
@@ -281,12 +287,36 @@ h3{
 <br></br>
 {% if invalid_form %}<p>Invalid form. Try again!</p>{% endif %}
 {% if edit %}
-  <a class="sub-reg" href='{% url 'edit_dialog' complaint.id %}'" type="" name="" value= "submit">Update</a>
-
+<div id="dialog" title="Box"></div>
+ <p class="sub-reg" id="edit-btn" style=" background-color: #4caf50;
+      color: white;
+      padding: 14px 20px;
+     
+      border: none;
+      cursor: pointer;
+      width: 20%;" name="" value="">Update</p>
 {% else %}
  <button class="sub-reg" type="submit" name="" value= "submit">Submit</button>
 {% endif %}
 </form>
 </div>
+<script type="text/javascript">
+    $(document).ready(function() {
+      document.getElementById("edit-btn").addEventListener("click",function(){
+        $("#dialog").dialog({
+          modal: true,
+          buttons: {
+            Yes: function() {
+             $('.reg-complaint').submit();
+              $( this ).dialog( "close" );
+            },
+            No: function() {
+              console.log('clicked no');
+            }
+          }
+        });
+      });
+    });
+  </script>
 
 {% endblock %}
